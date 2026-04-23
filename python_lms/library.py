@@ -11,12 +11,12 @@ TRANSACTION_FILE = "transactions.csv"
 # Validations
 
 def validate_book_id(book_id):
-    """Book ID: exactly 2 letters followed by 2 digits (e.g. AB12)."""
+    # Book ID: exactly 2 letters followed by 2 digits (e.g. AB12).
     return bool(re.fullmatch(r'[A-Za-z]{2}\d{2}', book_id))
 
 
 def validate_isbn13(isbn):
-    """Validate ISBN-13 check digit using the standard algorithm."""
+    # Validate ISBN-13 check digit using the standard algorithm.
     isbn = isbn.replace("-", "").replace(" ", "")
     if len(isbn) != 13 or not isbn.isdigit():
         return False
