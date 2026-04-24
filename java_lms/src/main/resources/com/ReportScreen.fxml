@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox prefHeight="500" prefWidth="580" spacing="15" style="-fx-background-color: #f0f4f8;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.ReportController">
+
+    <padding>
+        <Insets topRightBottomLeft="25" />
+    </padding>
+
+    <!-- Screen heading -->
+    <Label style="-fx-text-fill: #1a252f; -fx-font-family: Arial; -fx-font-size: 20px; -fx-font-weight: BOLD;" text="Books Issued Report" />
+
+    <!-- Date input row -->
+    <HBox alignment="CENTER_LEFT" spacing="10">
+        <Label text="Enter Date:" />
+        <TextField fx:id="tfDate" prefWidth="150" promptText="DD/MM/YYYY" />
+        <Button fx:id="handleSearch" style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-size: 13px; -fx-padding: 8 18; -fx-cursor: hand;" text="Search">
+        </Button>
+    </HBox>
+
+    <!-- Result count label -->
+    <Label fx:id="lblCount" />
+
+    <!-- Results table -->
+    <TableView fx:id="table" prefHeight="280">
+        <columns>
+            <TableColumn fx:id="colDate" prefWidth="130" text="Date" />
+            <TableColumn fx:id="colBook" prefWidth="100" text="Book ID" />
+            <TableColumn fx:id="colStudent" prefWidth="150" text="Student ID" />
+        </columns>
+    </TableView>
+
+    <!-- Back button -->
+    <Button fx:id="handleBack" style="-fx-background-color: #95a5a6; -fx-text-fill: white; -fx-font-size: 13px; -fx-padding: 8 18; -fx-cursor: hand;" text="← Back to Menu">
+    </Button>
+
+</VBox>

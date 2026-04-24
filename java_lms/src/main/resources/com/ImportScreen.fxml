@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox prefHeight="520" prefWidth="700" spacing="15" style="-fx-background-color: #f0f4f8;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.ImportController">
+
+    <padding>
+        <Insets topRightBottomLeft="25" />
+    </padding>
+
+    <!-- Screen heading -->
+    <Label style="-fx-text-fill: #1a252f; -fx-font-family: Arial; -fx-font-size: 20px; -fx-font-weight: BOLD;" text="Import CSV Files" />
+
+    <!-- File path grid -->
+    <GridPane hgap="10" vgap="10">
+        <padding>
+            <Insets topRightBottomLeft="10" />
+        </padding>
+
+        <!-- Row 0: Book file -->
+        <Label text="Book File:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+        <TextField fx:id="tfBooks" prefWidth="320" text="book.csv" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+        <Button onAction="#handleBrowseBooks" text="Browse" GridPane.columnIndex="2" GridPane.rowIndex="0">
+        </Button>
+
+        <!-- Row 1: Student file -->
+        <Label text="Student File:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+        <TextField fx:id="tfStudents" prefWidth="320" text="student.csv" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+        <Button onAction="#handleBrowseStudents" text="Browse" GridPane.columnIndex="2" GridPane.rowIndex="1">
+        </Button>
+
+        <!-- Row 2: Transaction file -->
+        <Label text="Transaction File:" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+        <TextField fx:id="tfTrans" prefWidth="320" text="transactions.csv" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+        <Button onAction="#handleBrowseTrans" text="Browse" GridPane.columnIndex="2" GridPane.rowIndex="2">
+        </Button>
+      <columnConstraints>
+         <ColumnConstraints />
+         <ColumnConstraints />
+         <ColumnConstraints />
+      </columnConstraints>
+      <rowConstraints>
+         <RowConstraints />
+         <RowConstraints />
+         <RowConstraints />
+      </rowConstraints>
+    </GridPane>
+
+    <!-- Action buttons -->
+    <HBox alignment="CENTER_LEFT" spacing="10">
+        <Button fx:id="btnImport" onAction="#handleImport" style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-size: 13px; -fx-padding: 8 18; -fx-cursor: hand;" text="Import Files">
+        </Button>
+        <Button fx:id="btnEdit" onAction="#handleEditRecord" style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-size: 13px; -fx-padding: 8 18; -fx-cursor: hand;" text="Edit Book Records">
+        </Button>
+        <Button fx:id="btnBack" onAction="#handleBack" style="-fx-background-color: #95a5a6; -fx-text-fill: white; -fx-font-size: 13px; -fx-padding: 8 18; -fx-cursor: hand;" text="← Back to Menu">
+        </Button>
+    </HBox>
+
+    <!-- Results label -->
+    <Label text="Validation Results:" />
+
+    <!-- Validation results area -->
+    <TextArea fx:id="taErrors" editable="false" prefHeight="180" promptText="Validation messages will appear here..." style="-fx-font-family: monospace; -fx-font-size: 12;" />
+
+</VBox>
