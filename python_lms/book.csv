@@ -1,6 +1,0 @@
-bookID,title,author,isbn13,copies,available,price
-AB12,Python Basics,John Smith,9780306406157,2,2,29.99
-CD34,Java Programming,Sarah Jones,9781861972712,2,1,34.50
-EF56,Data Structures,Mike Brown,9780132350884,1,1,45.00
-GH78,Web Development,Emma Wilson,9780596007126,2,2,39.99
-IJ90,Database Design,Chris Davis,9780201633610,1,0,42.75
