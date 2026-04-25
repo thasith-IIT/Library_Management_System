@@ -20,7 +20,7 @@ import java.util.List;
  * CM1601 - Library Management System
  *
  * Screens:
- *   1. Import CSV Files (with validation & inline editing)
+ *   1. Import CSV Files (with validation & inline editing for Books, Students, Transactions)
  *   2. Books Issued Report by Date
  *   3. Average Cost of Books
  *   4. Search Books by Title (with wildcard + export)
@@ -30,7 +30,7 @@ public class MainGUI extends Application {
     private LibraryManager manager = new LibraryManager();
     private Stage primaryStage;
 
-    private static final double WINDOW_WIDTH = 750;
+    private static final double WINDOW_WIDTH  = 750;
     private static final double WINDOW_HEIGHT = 550;
 
     // Static reference so FXML controllers can access the stage
@@ -41,13 +41,14 @@ public class MainGUI extends Application {
     }
 
     // ──────────────────────────────────────────────
-    // APPLICATION START  (updated to load from FXML)
+    // APPLICATION START
     // ──────────────────────────────────────────────
     @Override
     public void start(Stage stage) {
-        this.primaryStage = stage;
+        this.primaryStage      = stage;
+        staticPrimaryStage     = stage;
         stage.setTitle("Library Management System - CM1601");
-        stage.setResizable(false); // Prevents the user from stretching the window
+        stage.setResizable(false);
         displayMainMenu();
         stage.show();
     }
@@ -101,17 +102,18 @@ public class MainGUI extends Application {
         return b;
     }
 
-    // ──────────────────────────────────────────────
+    // ══════════════════════════════════════════════
     // SCREEN 1: IMPORT CSV FILES
-    // ──────────────────────────────────────────────
+    // Three separate edit buttons — one for each record type.
+    // ══════════════════════════════════════════════
     public void displayImportScreen() {
-        VBox root = new VBox(15);
+        VBox root = new VBox(12);
         root.setPadding(new Insets(25));
         root.setStyle("-fx-background-color: #f0f4f8;");
 
         Label heading = screenHeading("Import CSV Files");
 
-        // File path fields
+        // ── File path grid ───────────────────────
         GridPane grid = new GridPane();
         grid.setHgap(10); grid.setVgap(10);
         grid.setPadding(new Insets(10));
@@ -127,16 +129,18 @@ public class MainGUI extends Application {
         Button btnBrowseB = browseButton(primaryStage, tfBooks);
         Button btnBrowseS = browseButton(primaryStage, tfStudents);
         Button btnBrowseT = browseButton(primaryStage, tfTrans);
-        grid.add(btnBrowseB, 2, 0); grid.add(btnBrowseS, 2, 1); grid.add(btnBrowseT, 2, 2);
+        grid.add(btnBrowseB, 2, 0);
+        grid.add(btnBrowseS, 2, 1);
+        grid.add(btnBrowseT, 2, 2);
 
-        // Error / status area
+        // ── Validation result area ───────────────
         TextArea taErrors = new TextArea();
         taErrors.setEditable(false);
-        taErrors.setPrefHeight(180);
+        taErrors.setPrefHeight(150);
         taErrors.setStyle("-fx-font-family: monospace; -fx-font-size: 12;");
         taErrors.setPromptText("Validation messages will appear here...");
 
-        // Import button
+        // ── Import button row ────────────────────
         Button btnImport = actionButton("Import Files");
         btnImport.setOnAction(e -> {
             List<String> errors = manager.importCSVFiles(
@@ -147,47 +151,68 @@ public class MainGUI extends Application {
                 taErrors.setText("✓ All files imported successfully!\n"
                         + "  Books loaded:        " + manager.getBooks().size() + "\n"
                         + "  Students loaded:     " + manager.getStudents().size() + "\n"
-                        + "  Transactions loaded: " + manager.getTransactions().size());
+                        + "  Transactions loaded: " + manager.getTransactions().size()
+                        + "\n\nUse the Edit buttons below to correct any invalid records.");
             } else {
                 StringBuilder sb = new StringBuilder("⚠ Import completed with errors:\n\n");
                 errors.forEach(err -> sb.append("  • ").append(err).append("\n"));
-                sb.append("\nData loaded with warnings. Please use the Edit button to correct records.");
+                sb.append("\nUse the Edit buttons below to correct the highlighted records.");
                 taErrors.setText(sb.toString());
             }
         });
 
-        // Edit Records button (opens book editing table)
-        Button btnEdit = actionButton("Edit Book Records");
-        btnEdit.setOnAction(e -> handleEditRecord());
-
         Button btnBack = backButton();
         btnBack.setOnAction(e -> displayMainMenu());
 
-        HBox buttons = new HBox(10, btnImport, btnEdit, btnBack);
-        buttons.setAlignment(Pos.CENTER_LEFT);
+        HBox importRow = new HBox(10, btnImport, btnBack);
+        importRow.setAlignment(Pos.CENTER_LEFT);
 
-        root.getChildren().addAll(heading, grid, buttons,
-                new Label("Validation Results:"), taErrors);
+        // ── Edit buttons section ─────────────────
+        Label editLabel = new Label("Edit Records  (import first, then correct any invalid data below):");
+        editLabel.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
 
+        // Blue = Books, Green = Students, Amber = Transactions
+        Button btnEditBooks = styledButton("Edit Book Records",        "#185FA5");
+        Button btnEditStudents = styledButton("Edit Student Records",  "#0F6E56");
+        Button btnEditTrans = styledButton("Edit Transaction Records", "#854F0B");
+
+        btnEditBooks.setOnAction(e    -> handleEditBookRecords());
+        btnEditStudents.setOnAction(e -> handleEditStudentRecords());
+        btnEditTrans.setOnAction(e    -> handleEditTransactionRecords());
+
+        HBox editRow = new HBox(10, btnEditBooks, btnEditStudents, btnEditTrans);
+        editRow.setAlignment(Pos.CENTER_LEFT);
+
+        root.getChildren().addAll(
+                heading, grid,
+                importRow,
+                new Separator(),
+                editLabel, editRow,
+                new Separator(),
+                new Label("Validation Results:"), taErrors
+        );
         primaryStage.setScene(new Scene(root, WINDOW_WIDTH, WINDOW_HEIGHT));
     }
 
-    /**
-     * Opens an editable table for correcting imported book records.
-     */
+    // ══════════════════════════════════════════════
+    // EDIT BOOK RECORDS
+    // Validation: ISBN-13 check digit, copies 0–2,
+    //             available 0–copies, price ≥ 0
+    // ══════════════════════════════════════════════
     public void handleEditRecord() {
+        // Kept for backward compatibility — delegates to the new method
+        handleEditBookRecords();
+    }
+
+    private void handleEditBookRecords() {
         if (manager.getBooks().isEmpty()) {
             showAlert("No Data", "Please import files first.");
             return;
         }
 
-        Stage editStage = new Stage();
-        editStage.setTitle("Edit Book Records");
-
-        // Build observable list with String properties for editing
         ObservableList<ObservableList<StringProperty>> data = FXCollections.observableArrayList();
         for (Book b : manager.getBooks()) {
-            ObservableList<StringProperty> row = FXCollections.observableArrayList(
+            data.add(FXCollections.observableArrayList(
                     new SimpleStringProperty(b.getBookID()),
                     new SimpleStringProperty(b.getTitle()),
                     new SimpleStringProperty(b.getAuthor()),
@@ -195,48 +220,301 @@ public class MainGUI extends Application {
                     new SimpleStringProperty(String.valueOf(b.getCopies())),
                     new SimpleStringProperty(String.valueOf(b.getAvailable())),
                     new SimpleStringProperty(String.format("%.2f", b.getPrice()))
-            );
-            data.add(row);
+            ));
         }
+
+        String[]  colNames  = {"Book ID", "Title", "Author", "ISBN-13", "Copies", "Available", "Price"};
+        double[]  colWidths = { 80,        130,      120,      130,       70,       80,           70};
+        TableView<ObservableList<StringProperty>> table = buildEditTable(colNames, colWidths, data);
+
+        Label hint = new Label(
+                "Validation rules: ISBN-13 check digit must be correct · Copies = 0, 1, or 2 · "
+                        + "Available ≤ Copies · Price ≥ 0");
+        hint.setStyle("-fx-font-size: 11px; -fx-font-style: italic; -fx-text-fill: #555;");
+        hint.setWrapText(true);
+
+        Stage stage = new Stage();
+        stage.setTitle("Edit Book Records");
+
+        Button btnSave   = styledButton("Save Changes", "#27ae60");
+        Button btnCancel = styledButton("Cancel",       "#95a5a6");
+        btnCancel.setOnAction(e -> stage.close());
+
+        btnSave.setOnAction(e -> {
+            StringBuilder errs = new StringBuilder();
+            for (int i = 0; i < data.size(); i++) {
+                ObservableList<StringProperty> row = data.get(i);
+                int r = i + 1;
+                String isbn      = row.get(3).get().trim();
+                String copiesStr = row.get(4).get().trim();
+                String availStr  = row.get(5).get().trim();
+                String priceStr  = row.get(6).get().trim();
+
+                if (!Book.validateISBN(isbn))
+                    errs.append("Row ").append(r).append(": Invalid ISBN-13 check digit [").append(isbn).append("]\n");
+
+                int copies = -1;
+                try {
+                    copies = Integer.parseInt(copiesStr);
+                    if (copies < 0 || copies > 2)
+                        errs.append("Row ").append(r).append(": Copies must be 0, 1, or 2 (got ").append(copies).append(")\n");
+                } catch (NumberFormatException ex) {
+                    errs.append("Row ").append(r).append(": Copies must be a whole number [").append(copiesStr).append("]\n");
+                }
+
+                try {
+                    int avail = Integer.parseInt(availStr);
+                    if (avail < 0)
+                        errs.append("Row ").append(r).append(": Available cannot be negative\n");
+                    else if (copies >= 0 && avail > copies)
+                        errs.append("Row ").append(r).append(": Available [").append(avail)
+                                .append("] cannot exceed Copies [").append(copies).append("]\n");
+                } catch (NumberFormatException ex) {
+                    errs.append("Row ").append(r).append(": Available must be a whole number [").append(availStr).append("]\n");
+                }
+
+                try {
+                    double price = Double.parseDouble(priceStr);
+                    if (price < 0)
+                        errs.append("Row ").append(r).append(": Price cannot be negative\n");
+                } catch (NumberFormatException ex) {
+                    errs.append("Row ").append(r).append(": Price must be a number [").append(priceStr).append("]\n");
+                }
+            }
+
+            if (errs.length() > 0) {
+                showAlert("Validation Errors — Please Fix Before Saving", errs.toString().trim());
+                return;
+            }
+
+            for (int i = 0; i < data.size(); i++) {
+                ObservableList<StringProperty> row = data.get(i);
+                manager.updateBook(i, new Book(
+                        row.get(0).get().trim(), row.get(1).get().trim(),
+                        row.get(2).get().trim(), row.get(3).get().trim(),
+                        Integer.parseInt(row.get(4).get().trim()),
+                        Integer.parseInt(row.get(5).get().trim()),
+                        Double.parseDouble(row.get(6).get().trim())
+                ));
+            }
+            showAlert("Saved", "Book records updated successfully.\n"
+                    + manager.getBooks().size() + " book(s) saved.");
+            stage.close();
+        });
+
+        stage.setScene(new Scene(buildEditLayout(table, hint, btnSave, btnCancel), 720, 460));
+        stage.show();
+    }
+
+    // ══════════════════════════════════════════════
+    // EDIT STUDENT RECORDS
+    // Validation: studentID = exactly 8 digits,
+    //             firstName = letters only, max 10 chars
+    // ══════════════════════════════════════════════
+    private void handleEditStudentRecords() {
+        if (manager.getStudents().isEmpty()) {
+            showAlert("No Data", "Please import files first.");
+            return;
+        }
+
+        ObservableList<ObservableList<StringProperty>> data = FXCollections.observableArrayList();
+        for (Student s : manager.getStudents()) {
+            data.add(FXCollections.observableArrayList(
+                    new SimpleStringProperty(s.getStudentID()),
+                    new SimpleStringProperty(s.getFirstName())
+            ));
+        }
+
+        String[] colNames  = {"Student ID (8 digits)", "First Name (letters, max 10)"};
+        double[] colWidths = { 220,                     300};
+        TableView<ObservableList<StringProperty>> table = buildEditTable(colNames, colWidths, data);
+
+        Label hint = new Label(
+                "Validation rules: Student ID must be exactly 8 digits · "
+                        + "First Name must be letters only, maximum 10 characters.");
+        hint.setStyle("-fx-font-size: 11px; -fx-font-style: italic; -fx-text-fill: #555;");
+        hint.setWrapText(true);
+
+        Stage stage = new Stage();
+        stage.setTitle("Edit Student Records");
+
+        Button btnSave   = styledButton("Save Changes", "#27ae60");
+        Button btnCancel = styledButton("Cancel",       "#95a5a6");
+        btnCancel.setOnAction(e -> stage.close());
+
+        btnSave.setOnAction(e -> {
+            StringBuilder errs = new StringBuilder();
+            for (int i = 0; i < data.size(); i++) {
+                ObservableList<StringProperty> row = data.get(i);
+                int r = i + 1;
+                String id   = row.get(0).get().trim();
+                String name = row.get(1).get().trim();
+
+                if (!Student.validateStudentID(id))
+                    errs.append("Row ").append(r)
+                            .append(": Student ID must be exactly 8 digits [").append(id).append("]\n");
+
+                if (name.isEmpty())
+                    errs.append("Row ").append(r).append(": First Name cannot be empty\n");
+                else if (!name.matches("[A-Za-z]{1,10}"))
+                    errs.append("Row ").append(r)
+                            .append(": First Name must be letters only, max 10 chars [").append(name).append("]\n");
+            }
+
+            if (errs.length() > 0) {
+                showAlert("Validation Errors — Please Fix Before Saving", errs.toString().trim());
+                return;
+            }
+
+            for (int i = 0; i < data.size(); i++) {
+                ObservableList<StringProperty> row = data.get(i);
+                manager.updateStudent(i, new Student(
+                        row.get(0).get().trim(),
+                        row.get(1).get().trim()
+                ));
+            }
+            showAlert("Saved", "Student records updated successfully.\n"
+                    + manager.getStudents().size() + " student(s) saved.");
+            stage.close();
+        });
+
+        stage.setScene(new Scene(buildEditLayout(table, hint, btnSave, btnCancel), 560, 400));
+        stage.show();
+    }
+
+    // ══════════════════════════════════════════════
+    // EDIT TRANSACTION RECORDS
+    // Validation: date = DD/MM/YYYY,
+    //             type = 1 (issue) or 2 (return),
+    //             bookID and studentID non-empty
+    // ══════════════════════════════════════════════
+    private void handleEditTransactionRecords() {
+        if (manager.getTransactions().isEmpty()) {
+            showAlert("No Data", "Please import files first.");
+            return;
+        }
+
+        ObservableList<ObservableList<StringProperty>> data = FXCollections.observableArrayList();
+        for (Transaction t : manager.getTransactions()) {
+            data.add(FXCollections.observableArrayList(
+                    new SimpleStringProperty(t.getDate()),
+                    new SimpleStringProperty(t.getBookID()),
+                    new SimpleStringProperty(t.getStudentID()),
+                    new SimpleStringProperty(String.valueOf(t.getType()))
+            ));
+        }
+
+        String[] colNames  = {"Date (DD/MM/YYYY)", "Book ID", "Student ID", "Type  1=Issue  2=Return"};
+        double[] colWidths = { 155,                  100,        120,          170};
+        TableView<ObservableList<StringProperty>> table = buildEditTable(colNames, colWidths, data);
+
+        Label hint = new Label(
+                "Validation rules: Date must be DD/MM/YYYY · Type must be 1 (Issue) or 2 (Return) · "
+                        + "Book ID and Student ID cannot be empty.");
+        hint.setStyle("-fx-font-size: 11px; -fx-font-style: italic; -fx-text-fill: #555;");
+        hint.setWrapText(true);
+
+        Stage stage = new Stage();
+        stage.setTitle("Edit Transaction Records");
+
+        Button btnSave   = styledButton("Save Changes", "#27ae60");
+        Button btnCancel = styledButton("Cancel",       "#95a5a6");
+        btnCancel.setOnAction(e -> stage.close());
+
+        btnSave.setOnAction(e -> {
+            StringBuilder errs = new StringBuilder();
+            for (int i = 0; i < data.size(); i++) {
+                ObservableList<StringProperty> row = data.get(i);
+                int r = i + 1;
+                String date      = row.get(0).get().trim();
+                String bookID    = row.get(1).get().trim();
+                String studentID = row.get(2).get().trim();
+                String typeStr   = row.get(3).get().trim();
+
+                if (!Transaction.validateDate(date))
+                    errs.append("Row ").append(r)
+                            .append(": Invalid date — must be DD/MM/YYYY [").append(date).append("]\n");
+
+                if (bookID.isEmpty())
+                    errs.append("Row ").append(r).append(": Book ID cannot be empty\n");
+
+                if (studentID.isEmpty())
+                    errs.append("Row ").append(r).append(": Student ID cannot be empty\n");
+
+                try {
+                    int type = Integer.parseInt(typeStr);
+                    if (type != 1 && type != 2)
+                        errs.append("Row ").append(r)
+                                .append(": Type must be 1 (Issue) or 2 (Return) [").append(type).append("]\n");
+                } catch (NumberFormatException ex) {
+                    errs.append("Row ").append(r)
+                            .append(": Type must be 1 or 2 [").append(typeStr).append("]\n");
+                }
+            }
+
+            if (errs.length() > 0) {
+                showAlert("Validation Errors — Please Fix Before Saving", errs.toString().trim());
+                return;
+            }
+
+            for (int i = 0; i < data.size(); i++) {
+                ObservableList<StringProperty> row = data.get(i);
+                manager.updateTransaction(i, new Transaction(
+                        row.get(0).get().trim(),
+                        row.get(1).get().trim(),
+                        row.get(2).get().trim(),
+                        Integer.parseInt(row.get(3).get().trim())
+                ));
+            }
+            showAlert("Saved", "Transaction records updated successfully.\n"
+                    + manager.getTransactions().size() + " transaction(s) saved.");
+            stage.close();
+        });
+
+        stage.setScene(new Scene(buildEditLayout(table, hint, btnSave, btnCancel), 590, 460));
+        stage.show();
+    }
+
+    // ══════════════════════════════════════════════
+    // SHARED EDIT HELPERS
+    // ══════════════════════════════════════════════
+
+    /**
+     * Builds a fully editable TableView from an observable list of String rows.
+     */
+    private TableView<ObservableList<StringProperty>> buildEditTable(
+            String[] colNames,
+            double[] colWidths,
+            ObservableList<ObservableList<StringProperty>> data) {
 
         TableView<ObservableList<StringProperty>> table = new TableView<>(data);
         table.setEditable(true);
-        String[] cols = {"BookID", "Title", "Author", "ISBN-13", "Copies", "Available", "Price"};
-        for (int i = 0; i < cols.length; i++) {
+        table.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
+
+        for (int i = 0; i < colNames.length; i++) {
             final int idx = i;
-            TableColumn<ObservableList<StringProperty>, String> col = new TableColumn<>(cols[i]);
+            TableColumn<ObservableList<StringProperty>, String> col = new TableColumn<>(colNames[i]);
             col.setCellValueFactory(param -> param.getValue().get(idx));
             col.setCellFactory(TextFieldTableCell.forTableColumn());
-            col.setOnEditCommit(event -> event.getRowValue().get(idx).set(event.getNewValue()));
-            col.setPrefWidth(100);
+            col.setOnEditCommit(ev -> ev.getRowValue().get(idx).set(ev.getNewValue()));
+            col.setPrefWidth(colWidths[i]);
             table.getColumns().add(col);
         }
+        return table;
+    }
 
-        Button btnSave = actionButton("Save Changes");
-        btnSave.setOnAction(e -> {
-            for (int i = 0; i < data.size(); i++) {
-                ObservableList<StringProperty> row = data.get(i);
-                try {
-                    Book updated = new Book(
-                            row.get(0).get(), row.get(1).get(), row.get(2).get(),
-                            row.get(3).get(),
-                            Integer.parseInt(row.get(4).get()),
-                            Integer.parseInt(row.get(5).get()),
-                            Double.parseDouble(row.get(6).get())
-                    );
-                    manager.updateBook(i, updated);
-                } catch (NumberFormatException ex) {
-                    showAlert("Error", "Invalid numeric value in row " + (i + 1));
-                }
-            }
-            showAlert("Saved", "Book records updated successfully.");
-            editStage.close();
-        });
-
-        VBox vbox = new VBox(10, table, btnSave);
+    /**
+     * Assembles the edit stage layout: table on top, hint text, then Save/Cancel buttons.
+     */
+    private VBox buildEditLayout(TableView<?> table,
+                                 Label hint,
+                                 Button btnSave,
+                                 Button btnCancel) {
+        HBox buttons = new HBox(10, btnSave, btnCancel);
+        buttons.setPadding(new Insets(8, 0, 0, 0));
+        VBox vbox = new VBox(10, table, hint, buttons);
         vbox.setPadding(new Insets(15));
-        editStage.setScene(new Scene(vbox, WINDOW_WIDTH, WINDOW_HEIGHT));
-        editStage.show();
+        return vbox;
     }
 
     // ──────────────────────────────────────────────
@@ -257,11 +535,10 @@ public class MainGUI extends Application {
         Button btnSearch = actionButton("Search");
         dateRow.getChildren().addAll(new Label("Enter Date:"), tfDate, btnSearch);
 
-        // Results table
         TableView<Transaction> table = new TableView<>();
-        TableColumn<Transaction, String> colDate   = new TableColumn<>("Date");
-        TableColumn<Transaction, String> colBook   = new TableColumn<>("Book ID");
-        TableColumn<Transaction, String> colStudent= new TableColumn<>("Student ID");
+        TableColumn<Transaction, String> colDate    = new TableColumn<>("Date");
+        TableColumn<Transaction, String> colBook    = new TableColumn<>("Book ID");
+        TableColumn<Transaction, String> colStudent = new TableColumn<>("Student ID");
         colDate.setCellValueFactory(p    -> new SimpleStringProperty(p.getValue().getDate()));
         colBook.setCellValueFactory(p    -> new SimpleStringProperty(p.getValue().getBookID()));
         colStudent.setCellValueFactory(p -> new SimpleStringProperty(p.getValue().getStudentID()));
@@ -304,8 +581,8 @@ public class MainGUI extends Application {
 
         Label heading = screenHeading("Average Cost of Books");
 
-        Button btnCalc = actionButton("Calculate Average Cost");
-        Label lblResult = new Label();
+        Button btnCalc     = actionButton("Calculate Average Cost");
+        Label  lblResult   = new Label();
         lblResult.setFont(Font.font("Arial", FontWeight.BOLD, 22));
         lblResult.setStyle("-fx-text-fill: #2c3e50;");
 
@@ -348,7 +625,6 @@ public class MainGUI extends Application {
         Button btnSearch = actionButton("Search");
         searchRow.getChildren().addAll(new Label("Title:"), tfQuery, btnSearch);
 
-        // Results table
         TableView<Book> table = new TableView<>();
         TableColumn<Book, String> colID    = new TableColumn<>("Book ID");
         TableColumn<Book, String> colTitle = new TableColumn<>("Title");
@@ -361,8 +637,10 @@ public class MainGUI extends Application {
         colTitle.setCellValueFactory(p -> new SimpleStringProperty(p.getValue().getTitle()));
         colAuth.setCellValueFactory(p  -> new SimpleStringProperty(p.getValue().getAuthor()));
         colISBN.setCellValueFactory(p  -> new SimpleStringProperty(p.getValue().getIsbn13()));
-        colAvail.setCellValueFactory(p -> new SimpleStringProperty(p.getValue().getAvailable() + "/" + p.getValue().getCopies()));
-        colPrice.setCellValueFactory(p -> new SimpleStringProperty(String.format("£%.2f", p.getValue().getPrice())));
+        colAvail.setCellValueFactory(p -> new SimpleStringProperty(
+                p.getValue().getAvailable() + "/" + p.getValue().getCopies()));
+        colPrice.setCellValueFactory(p -> new SimpleStringProperty(
+                String.format("£%.2f", p.getValue().getPrice())));
 
         colID.setPrefWidth(80); colTitle.setPrefWidth(160); colAuth.setPrefWidth(130);
         colISBN.setPrefWidth(130); colAvail.setPrefWidth(80); colPrice.setPrefWidth(70);
@@ -383,7 +661,6 @@ public class MainGUI extends Application {
             lblCount.setText("Found: " + results.size() + " result(s).");
         });
 
-        // Export button
         Button btnExport = actionButton("Export Results");
         btnExport.setOnAction(e -> {
             if (table.getItems().isEmpty()) {
@@ -425,6 +702,14 @@ public class MainGUI extends Application {
     private Button actionButton(String text) {
         Button b = new Button(text);
         b.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; "
+                + "-fx-font-size: 13px; -fx-padding: 8 18; -fx-cursor: hand;");
+        return b;
+    }
+
+    /** Coloured button — used for the three distinct Edit buttons. */
+    private Button styledButton(String text, String bgColor) {
+        Button b = new Button(text);
+        b.setStyle("-fx-background-color: " + bgColor + "; -fx-text-fill: white; "
                 + "-fx-font-size: 13px; -fx-padding: 8 18; -fx-cursor: hand;");
         return b;
     }

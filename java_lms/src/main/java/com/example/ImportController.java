@@ -10,6 +10,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -27,15 +28,9 @@ public class ImportController implements com.example.ManagerAware {
 
     private LibraryManager manager;
 
-    /**
-     * This method runs automatically when the FXML is loaded.
-     * It sets the absolute path for your CSV files so you don't have to browse.
-     */
     @FXML
     public void initialize() {
-        // We look for the 'data' folder in your project root
         String dataPath = new File("data").getAbsolutePath();
-
         tfBooks.setText(dataPath + File.separator + "book.csv");
         tfStudents.setText(dataPath + File.separator + "student.csv");
         tfTrans.setText(dataPath + File.separator + "transactions.csv");
@@ -47,19 +42,13 @@ public class ImportController implements com.example.ManagerAware {
     }
 
     @FXML
-    private void handleBrowseBooks() {
-        browse(tfBooks);
-    }
+    private void handleBrowseBooks() { browse(tfBooks); }
 
     @FXML
-    private void handleBrowseStudents() {
-        browse(tfStudents);
-    }
+    private void handleBrowseStudents() { browse(tfStudents); }
 
     @FXML
-    private void handleBrowseTrans() {
-        browse(tfTrans);
-    }
+    private void handleBrowseTrans() { browse(tfTrans); }
 
     private void browse(TextField target) {
         FileChooser fc = new FileChooser();
@@ -68,13 +57,9 @@ public class ImportController implements com.example.ManagerAware {
         if (f != null) target.setText(f.getAbsolutePath());
     }
 
-    /**
-     * Updated handleImport to use the ActionEvent from the FXML button.
-     */
     @FXML
     private void handleImport(ActionEvent event) {
         if (manager == null) return;
-
         List<String> errors = manager.importCSVFiles(
                 tfBooks.getText().trim(),
                 tfStudents.getText().trim(),
@@ -88,24 +73,20 @@ public class ImportController implements com.example.ManagerAware {
         } else {
             StringBuilder sb = new StringBuilder("⚠ Import completed with errors:\n\n");
             errors.forEach(err -> sb.append("  • ").append(err).append("\n"));
-            sb.append("\nData loaded with warnings. Please use the Edit button to correct records.");
             taErrors.setText(sb.toString());
         }
     }
 
     @FXML
     public void handleEditRecord() {
-        if (manager.getBooks().isEmpty()) {
+        if (manager == null || manager.getBooks().isEmpty()) {
             showAlert("No Data", "Please import files first.");
             return;
         }
 
-        Stage editStage = new Stage();
-        editStage.setTitle("Edit Book Records");
-
         ObservableList<ObservableList<StringProperty>> data = FXCollections.observableArrayList();
         for (Book b : manager.getBooks()) {
-            ObservableList<StringProperty> row = FXCollections.observableArrayList(
+            data.add(FXCollections.observableArrayList(
                     new SimpleStringProperty(b.getBookID()),
                     new SimpleStringProperty(b.getTitle()),
                     new SimpleStringProperty(b.getAuthor()),
@@ -113,69 +94,162 @@ public class ImportController implements com.example.ManagerAware {
                     new SimpleStringProperty(String.valueOf(b.getCopies())),
                     new SimpleStringProperty(String.valueOf(b.getAvailable())),
                     new SimpleStringProperty(String.format("%.2f", b.getPrice()))
-            );
-            data.add(row);
+            ));
         }
 
-        TableView<ObservableList<StringProperty>> table = new TableView<>(data);
-        table.setEditable(true);
-        String[] cols = {"BookID", "Title", "Author", "ISBN-13", "Copies", "Available", "Price"};
-        for (int i = 0; i < cols.length; i++) {
-            final int idx = i;
-            TableColumn<ObservableList<StringProperty>, String> col = new TableColumn<>(cols[i]);
-            col.setCellValueFactory(param -> param.getValue().get(idx));
-            col.setCellFactory(TextFieldTableCell.forTableColumn());
-            col.setOnEditCommit(e -> e.getRowValue().get(idx).set(e.getNewValue()));
-            col.setPrefWidth(100);
-            table.getColumns().add(col);
-        }
+        TableView<ObservableList<StringProperty>> table = buildEditTable(
+                new String[]{"Book ID", "Title", "Author", "ISBN-13", "Copies", "Available", "Price"},
+                new double[]{ 80, 130, 120, 130, 70, 80, 70}, data);
 
-        Button btnSave = new Button("Save Changes");
-        btnSave.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-size: 13px; -fx-padding: 8 18;");
+        Button btnSave = styledButton("Save Changes", "#27ae60");
         btnSave.setOnAction(e -> {
+            // FORCE COMMIT: Saves the cell currently being typed in
+            table.edit(-1, null);
+
+            StringBuilder validationErrors = new StringBuilder();
             for (int i = 0; i < data.size(); i++) {
                 ObservableList<StringProperty> row = data.get(i);
+                int r = i + 1;
+                String isbn = row.get(3).get().trim();
+                if (!Book.validateISBN(isbn)) validationErrors.append("Row ").append(r).append(": Invalid ISBN\n");
+
                 try {
-                    Book updated = new Book(
-                            row.get(0).get(), row.get(1).get(), row.get(2).get(),
-                            row.get(3).get(),
-                            Integer.parseInt(row.get(4).get()),
-                            Integer.parseInt(row.get(5).get()),
-                            Double.parseDouble(row.get(6).get())
-                    );
-                    manager.updateBook(i, updated);
-                } catch (NumberFormatException ex) {
-                    showAlert("Error", "Invalid numeric value in row " + (i + 1));
-                }
+                    int c = Integer.parseInt(row.get(4).get().trim());
+                    int a = Integer.parseInt(row.get(5).get().trim());
+                    if (c < 0 || c > 2) validationErrors.append("Row ").append(r).append(": Copies 0-2 only\n");
+                    if (a < 0 || a > c) validationErrors.append("Row ").append(r).append(": Available invalid\n");
+                } catch (Exception ex) { validationErrors.append("Row ").append(r).append(": Non-numeric counts\n"); }
             }
-            showAlert("Saved", "Book records updated successfully.");
-            editStage.close();
+
+            if (validationErrors.length() > 0) {
+                showAlert("Validation Errors", validationErrors.toString());
+                return;
+            }
+
+            for (int i = 0; i < data.size(); i++) {
+                ObservableList<StringProperty> row = data.get(i);
+                manager.updateBook(i, new Book(row.get(0).get(), row.get(1).get(), row.get(2).get(),
+                        row.get(3).get(), Integer.parseInt(row.get(4).get()),
+                        Integer.parseInt(row.get(5).get()), Double.parseDouble(row.get(6).get())));
+            }
+            showAlert("Saved", "Records updated.");
+            ((Stage) btnSave.getScene().getWindow()).close();
         });
 
-        VBox vbox = new VBox(10, table, btnSave);
+        Stage stage = buildEditStage("Edit Books", table, new Label("Edit inline and save"), btnSave, styledButton("Cancel", "#95a5a6"), 700, 480);
+        stage.show();
+    }
+
+    @FXML
+    public void handleEditStudentRecord() {
+        if (manager == null || manager.getStudents().isEmpty()) {
+            showAlert("No Data", "Import first.");
+            return;
+        }
+
+        ObservableList<ObservableList<StringProperty>> data = FXCollections.observableArrayList();
+        for (Student s : manager.getStudents()) {
+            data.add(FXCollections.observableArrayList(new SimpleStringProperty(s.getStudentID()), new SimpleStringProperty(s.getFirstName())));
+        }
+
+        TableView<ObservableList<StringProperty>> table = buildEditTable(new String[]{"ID", "Name"}, new double[]{200, 280}, data);
+        Button btnSave = styledButton("Save Changes", "#27ae60");
+
+        btnSave.setOnAction(e -> {
+            table.edit(-1, null); // Commit active edit
+            StringBuilder errs = new StringBuilder();
+            for (int i = 0; i < data.size(); i++) {
+                if (!Student.validateStudentID(data.get(i).get(0).get().trim()))
+                    errs.append("Row ").append(i+1).append(": ID must be 8 digits\n");
+            }
+            if (errs.length() > 0) { showAlert("Errors", errs.toString()); return; }
+
+            for (int i = 0; i < data.size(); i++) {
+                manager.updateStudent(i, new Student(data.get(i).get(0).get(), data.get(i).get(1).get()));
+            }
+            ((Stage) btnSave.getScene().getWindow()).close();
+        });
+
+        buildEditStage("Edit Students", table, new Label(""), btnSave, styledButton("Cancel", "#95a5a6"), 520, 400).show();
+    }
+
+    @FXML
+    public void handleEditTransactionRecord() {
+        if (manager == null || manager.getTransactions().isEmpty()) {
+            showAlert("No Data", "Import first.");
+            return;
+        }
+
+        ObservableList<ObservableList<StringProperty>> data = FXCollections.observableArrayList();
+        for (Transaction t : manager.getTransactions()) {
+            data.add(FXCollections.observableArrayList(new SimpleStringProperty(t.getDate()), new SimpleStringProperty(t.getBookID()), new SimpleStringProperty(t.getStudentID()), new SimpleStringProperty(String.valueOf(t.getType()))));
+        }
+
+        TableView<ObservableList<StringProperty>> table = buildEditTable(new String[]{"Date", "Book", "Student", "Type"}, new double[]{160, 100, 130, 160}, data);
+        Button btnSave = styledButton("Save Changes", "#27ae60");
+
+        btnSave.setOnAction(e -> {
+            table.edit(-1, null); // Commit active edit
+            StringBuilder errs = new StringBuilder();
+            for (int i = 0; i < data.size(); i++) {
+                if (!Transaction.validateDate(data.get(i).get(0).get().trim()))
+                    errs.append("Row ").append(i+1).append(": Invalid Date\n");
+            }
+            if (errs.length() > 0) { showAlert("Errors", errs.toString()); return; }
+
+            for (int i = 0; i < data.size(); i++) {
+                ObservableList<StringProperty> r = data.get(i);
+                manager.updateTransaction(i, new Transaction(r.get(0).get(), r.get(1).get(), r.get(2).get(), Integer.parseInt(r.get(3).get())));
+            }
+            ((Stage) btnSave.getScene().getWindow()).close();
+        });
+
+        buildEditStage("Edit Transactions", table, new Label(""), btnSave, styledButton("Cancel", "#95a5a6"), 600, 460).show();
+    }
+
+    private TableView<ObservableList<StringProperty>> buildEditTable(String[] names, double[] widths, ObservableList<ObservableList<StringProperty>> data) {
+        TableView<ObservableList<StringProperty>> table = new TableView<>(data);
+        table.setEditable(true);
+        for (int i = 0; i < names.length; i++) {
+            final int idx = i;
+            TableColumn<ObservableList<StringProperty>, String> col = new TableColumn<>(names[i]);
+            col.setCellValueFactory(p -> p.getValue().get(idx));
+            col.setCellFactory(TextFieldTableCell.forTableColumn());
+            col.setOnEditCommit(ev -> ev.getRowValue().get(idx).set(ev.getNewValue()));
+            col.setPrefWidth(widths[i]);
+            table.getColumns().add(col);
+        }
+        return table;
+    }
+
+    private Stage buildEditStage(String t, TableView<?> tbl, Label h, Button s, Button c, int w, int hgt) {
+        Stage stage = new Stage();
+        stage.setTitle(t);
+        VBox vbox = new VBox(10, tbl, h, new HBox(10, s, c));
         vbox.setPadding(new javafx.geometry.Insets(15));
-        editStage.setScene(new Scene(vbox, 750, 420));
-        editStage.show();
+        stage.setScene(new Scene(vbox, w, hgt));
+        c.setOnAction(e -> stage.close());
+        return stage;
+    }
+
+    private Button styledButton(String text, String color) {
+        Button b = new Button(text);
+        b.setStyle("-fx-background-color: " + color + "; -fx-text-fill: white; -fx-cursor: hand; -fx-padding: 8 18;");
+        return b;
     }
 
     @FXML
     private void handleBack(ActionEvent event) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("fxml/MainMenu.fxml"));
-            Scene scene = new Scene(loader.load(), 500, 520);
-            MainMenuController ctrl = loader.getController();
-            ctrl.setManager(manager);
-            MainGUI.getPrimaryStage().setScene(scene);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+            FXMLLoader l = new FXMLLoader(getClass().getResource("fxml/MainMenu.fxml"));
+            Scene s = new Scene(l.load(), 500, 520);
+            ((MainMenuController)l.getController()).setManager(manager);
+            MainGUI.getPrimaryStage().setScene(s);
+        } catch (IOException e) { e.printStackTrace(); }
     }
 
-    private void showAlert(String title, String msg) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(msg);
-        alert.showAndWait();
+    private void showAlert(String t, String m) {
+        Alert a = new Alert(Alert.AlertType.INFORMATION);
+        a.setTitle(t); a.setHeaderText(null); a.setContentText(m); a.showAndWait();
     }
 }

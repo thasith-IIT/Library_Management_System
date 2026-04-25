@@ -61,7 +61,6 @@ public class LibraryManager {
                 String availStr  = parts[5].trim();
                 String priceStr  = parts[6].trim();
 
-                // Validate Student ID format in book file (N/A), validate ISBN-13
                 if (!Book.validateISBN(isbn13)) {
                     errors.add("Book line " + lineNum + ": Invalid ISBN-13 [" + isbn13 + "] for book " + bookID);
                 }
@@ -237,6 +236,15 @@ public class LibraryManager {
     public void updateStudent(int index, Student updated) {
         if (index >= 0 && index < students.size()) {
             students.set(index, updated);
+        }
+    }
+
+    /**
+     * Update a transaction record in the list.
+     */
+    public void updateTransaction(int index, Transaction updated) {
+        if (index >= 0 && index < transactions.size()) {
+            transactions.set(index, updated);
         }
     }
 }
