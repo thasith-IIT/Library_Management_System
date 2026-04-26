@@ -8,10 +8,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.*;
 import java.util.List;
 
-/**
- * JUnit 5 Unit Tests for Library Management System - Java Module
- * CM1601 - Library Management System
- */
 public class LibraryTest {
 
     // Book.validateISBN Tests
