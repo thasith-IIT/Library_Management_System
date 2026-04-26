@@ -14,9 +14,7 @@ import java.util.List;
  */
 public class LibraryTest {
 
-    // ════════════════════════════════════════
     // Book.validateISBN Tests
-    // ════════════════════════════════════════
 
     @Test
     @DisplayName("Valid ISBN-13 should return true")
@@ -54,9 +52,7 @@ public class LibraryTest {
         assertTrue(Book.validateISBN("9781861972712"));
     }
 
-    // ════════════════════════════════════════
     // Student.validateStudentID Tests
-    // ════════════════════════════════════════
 
     @Test
     @DisplayName("Valid 8-digit student ID should return true")
@@ -88,9 +84,7 @@ public class LibraryTest {
         assertFalse(Student.validateStudentID(null));
     }
 
-    // ════════════════════════════════════════
     // Transaction.validateDate Tests
-    // ════════════════════════════════════════
 
     @Test
     @DisplayName("Valid date DD/MM/YYYY should return true")
@@ -122,9 +116,7 @@ public class LibraryTest {
         assertFalse(Transaction.validateDate(null));
     }
 
-    // ════════════════════════════════════════
     // LibraryManager - Business Logic Tests
-    // ════════════════════════════════════════
 
     @Test
     @DisplayName("calculateAverageCost returns 0 when no books loaded")

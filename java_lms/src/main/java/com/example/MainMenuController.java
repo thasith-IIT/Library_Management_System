@@ -8,10 +8,6 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 
-/**
- * Controller for MainMenu.fxml
- * CM1601 - Library Management System
- */
 public class MainMenuController {
 
     @FXML private void handleImport(ActionEvent event) {}

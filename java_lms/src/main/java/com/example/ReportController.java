@@ -10,10 +10,6 @@ import javafx.scene.control.*;
 import java.io.IOException;
 import java.util.List;
 
-/**
- * Controller for ReportScreen.fxml
- * CM1601 - Library Management System
- */
 public class ReportController implements com.example.ManagerAware {
 
     @FXML private TextField              tfDate;
@@ -32,8 +28,8 @@ public class ReportController implements com.example.ManagerAware {
 
     @FXML
     public void initialize() {
-        colDate.setCellValueFactory(p    -> new SimpleStringProperty(p.getValue().getDate()));
-        colBook.setCellValueFactory(p    -> new SimpleStringProperty(p.getValue().getBookID()));
+        colDate.setCellValueFactory(p -> new SimpleStringProperty(p.getValue().getDate()));
+        colBook.setCellValueFactory(p -> new SimpleStringProperty(p.getValue().getBookID()));
         colStudent.setCellValueFactory(p -> new SimpleStringProperty(p.getValue().getStudentID()));
     }
 

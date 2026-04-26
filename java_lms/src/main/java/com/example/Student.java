@@ -1,9 +1,5 @@
 package com.example;
 
-/**
- * Represents a Student entity.
- * CM1601 - Library Management System
- */
 public class Student {
 
     private String studentID;
@@ -14,17 +10,15 @@ public class Student {
         this.firstName = firstName;
     }
 
-    // ── Getters ──────────────────────────────
+    // Getters
     public String getStudentID()  { return studentID; }
     public String getFirstName()  { return firstName; }
 
-    // ── Setters ──────────────────────────────
+    // Setters
     public void setStudentID(String studentID) { this.studentID = studentID; }
     public void setFirstName(String firstName) { this.firstName = firstName; }
 
-    /**
-     * Validate Student ID: exactly 8 digits.
-     */
+
     public static boolean validateStudentID(String id) {
         return id != null && id.matches("\\d{8}");
     }

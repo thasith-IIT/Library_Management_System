@@ -15,16 +15,6 @@ import javafx.stage.*;
 import java.io.IOException;
 import java.util.List;
 
-/**
- * Main JavaFX GUI for the Library Management System.
- * CM1601 - Library Management System
- *
- * Screens:
- *   1. Import CSV Files (with validation & inline editing for Books, Students, Transactions)
- *   2. Books Issued Report by Date
- *   3. Average Cost of Books
- *   4. Search Books by Title (with wildcard + export)
- */
 public class MainGUI extends Application {
 
     private LibraryManager manager = new LibraryManager();
@@ -40,9 +30,7 @@ public class MainGUI extends Application {
         return staticPrimaryStage;
     }
 
-    // ──────────────────────────────────────────────
     // APPLICATION START
-    // ──────────────────────────────────────────────
     @Override
     public void start(Stage stage) {
         this.primaryStage      = stage;
@@ -53,9 +41,7 @@ public class MainGUI extends Application {
         stage.show();
     }
 
-    // ──────────────────────────────────────────────
     // MAIN MENU
-    // ──────────────────────────────────────────────
     private void displayMainMenu() {
         VBox root = new VBox(20);
         root.setPadding(new Insets(40));
@@ -102,10 +88,7 @@ public class MainGUI extends Application {
         return b;
     }
 
-    // ══════════════════════════════════════════════
     // SCREEN 1: IMPORT CSV FILES
-    // Three separate edit buttons — one for each record type.
-    // ══════════════════════════════════════════════
     public void displayImportScreen() {
         VBox root = new VBox(12);
         root.setPadding(new Insets(25));
@@ -113,7 +96,7 @@ public class MainGUI extends Application {
 
         Label heading = screenHeading("Import CSV Files");
 
-        // ── File path grid ───────────────────────
+        // File path grid
         GridPane grid = new GridPane();
         grid.setHgap(10); grid.setVgap(10);
         grid.setPadding(new Insets(10));
@@ -133,14 +116,14 @@ public class MainGUI extends Application {
         grid.add(btnBrowseS, 2, 1);
         grid.add(btnBrowseT, 2, 2);
 
-        // ── Validation result area ───────────────
+        // Validation result area
         TextArea taErrors = new TextArea();
         taErrors.setEditable(false);
         taErrors.setPrefHeight(150);
         taErrors.setStyle("-fx-font-family: monospace; -fx-font-size: 12;");
         taErrors.setPromptText("Validation messages will appear here...");
 
-        // ── Import button row ────────────────────
+        // Import button row
         Button btnImport = actionButton("Import Files");
         btnImport.setOnAction(e -> {
             List<String> errors = manager.importCSVFiles(
@@ -167,11 +150,10 @@ public class MainGUI extends Application {
         HBox importRow = new HBox(10, btnImport, btnBack);
         importRow.setAlignment(Pos.CENTER_LEFT);
 
-        // ── Edit buttons section ─────────────────
+        // Edit buttons section
         Label editLabel = new Label("Edit Records  (import first, then correct any invalid data below):");
         editLabel.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
 
-        // Blue = Books, Green = Students, Amber = Transactions
         Button btnEditBooks = styledButton("Edit Book Records",        "#185FA5");
         Button btnEditStudents = styledButton("Edit Student Records",  "#0F6E56");
         Button btnEditTrans = styledButton("Edit Transaction Records", "#854F0B");
@@ -194,11 +176,7 @@ public class MainGUI extends Application {
         primaryStage.setScene(new Scene(root, WINDOW_WIDTH, WINDOW_HEIGHT));
     }
 
-    // ══════════════════════════════════════════════
     // EDIT BOOK RECORDS
-    // Validation: ISBN-13 check digit, copies 0–2,
-    //             available 0–copies, price ≥ 0
-    // ══════════════════════════════════════════════
     public void handleEditRecord() {
         // Kept for backward compatibility — delegates to the new method
         handleEditBookRecords();
@@ -306,11 +284,8 @@ public class MainGUI extends Application {
         stage.show();
     }
 
-    // ══════════════════════════════════════════════
+
     // EDIT STUDENT RECORDS
-    // Validation: studentID = exactly 8 digits,
-    //             firstName = letters only, max 10 chars
-    // ══════════════════════════════════════════════
     private void handleEditStudentRecords() {
         if (manager.getStudents().isEmpty()) {
             showAlert("No Data", "Please import files first.");
@@ -382,12 +357,8 @@ public class MainGUI extends Application {
         stage.show();
     }
 
-    // ══════════════════════════════════════════════
+
     // EDIT TRANSACTION RECORDS
-    // Validation: date = DD/MM/YYYY,
-    //             type = 1 (issue) or 2 (return),
-    //             bookID and studentID non-empty
-    // ══════════════════════════════════════════════
     private void handleEditTransactionRecords() {
         if (manager.getTransactions().isEmpty()) {
             showAlert("No Data", "Please import files first.");
@@ -475,13 +446,8 @@ public class MainGUI extends Application {
         stage.show();
     }
 
-    // ══════════════════════════════════════════════
     // SHARED EDIT HELPERS
-    // ══════════════════════════════════════════════
 
-    /**
-     * Builds a fully editable TableView from an observable list of String rows.
-     */
     private TableView<ObservableList<StringProperty>> buildEditTable(
             String[] colNames,
             double[] colWidths,
@@ -503,9 +469,7 @@ public class MainGUI extends Application {
         return table;
     }
 
-    /**
-     * Assembles the edit stage layout: table on top, hint text, then Save/Cancel buttons.
-     */
+
     private VBox buildEditLayout(TableView<?> table,
                                  Label hint,
                                  Button btnSave,
@@ -517,9 +481,7 @@ public class MainGUI extends Application {
         return vbox;
     }
 
-    // ──────────────────────────────────────────────
     // SCREEN 2: BOOKS ISSUED REPORT
-    // ──────────────────────────────────────────────
     public void displayReportScreen() {
         VBox root = new VBox(15);
         root.setPadding(new Insets(25));
@@ -570,9 +532,7 @@ public class MainGUI extends Application {
         primaryStage.setScene(new Scene(root, WINDOW_WIDTH, WINDOW_HEIGHT));
     }
 
-    // ──────────────────────────────────────────────
     // SCREEN 3: AVERAGE COST
-    // ──────────────────────────────────────────────
     private void displayAverageCostScreen() {
         VBox root = new VBox(20);
         root.setPadding(new Insets(40));
@@ -605,9 +565,7 @@ public class MainGUI extends Application {
         primaryStage.setScene(new Scene(root, WINDOW_WIDTH, WINDOW_HEIGHT));
     }
 
-    // ──────────────────────────────────────────────
     // SCREEN 4: SEARCH BOOKS
-    // ──────────────────────────────────────────────
     private void displaySearchScreen() {
         VBox root = new VBox(15);
         root.setPadding(new Insets(25));
@@ -689,9 +647,7 @@ public class MainGUI extends Application {
         primaryStage.setScene(new Scene(root, WINDOW_WIDTH, WINDOW_HEIGHT));
     }
 
-    // ──────────────────────────────────────────────
     // UI HELPERS
-    // ──────────────────────────────────────────────
     private Label screenHeading(String text) {
         Label l = new Label(text);
         l.setFont(Font.font("Arial", FontWeight.BOLD, 20));
@@ -706,7 +662,6 @@ public class MainGUI extends Application {
         return b;
     }
 
-    /** Coloured button — used for the three distinct Edit buttons. */
     private Button styledButton(String text, String bgColor) {
         Button b = new Button(text);
         b.setStyle("-fx-background-color: " + bgColor + "; -fx-text-fill: white; "
@@ -746,9 +701,7 @@ public class MainGUI extends Application {
         alert.showAndWait();
     }
 
-    // ──────────────────────────────────────────────
     // ENTRY POINT
-    // ──────────────────────────────────────────────
     public static void main(String[] args) {
         launch(args);
     }

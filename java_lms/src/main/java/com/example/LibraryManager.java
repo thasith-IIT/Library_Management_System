@@ -6,24 +6,14 @@ import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- * Core business logic for the Library Management System.
- * Handles data loading, searching, reporting, and exporting.
- * CM1601 - Library Management System
- */
 public class LibraryManager {
 
-    private List<Book>        books        = new ArrayList<>();
-    private List<Student>     students     = new ArrayList<>();
+    private List<Book> books = new ArrayList<>();
+    private List<Student> students = new ArrayList<>();
     private List<Transaction> transactions = new ArrayList<>();
 
-    // ══════════════════════════════════════════════
     // IMPORT CSV FILES
-    // ══════════════════════════════════════════════
 
-    /**
-     * Import all three CSV files. Returns a list of validation error messages.
-     */
     public List<String> importCSVFiles(String bookPath, String studentPath, String transPath) {
         List<String> errors = new ArrayList<>();
         books.clear();
@@ -53,13 +43,13 @@ public class LibraryManager {
                     errors.add("Book line " + lineNum + ": insufficient columns -> " + line);
                     continue;
                 }
-                String bookID    = parts[0].trim();
-                String title     = parts[1].trim();
-                String author    = parts[2].trim();
-                String isbn13    = parts[3].trim();
+                String bookID = parts[0].trim();
+                String title = parts[1].trim();
+                String author = parts[2].trim();
+                String isbn13 = parts[3].trim();
                 String copiesStr = parts[4].trim();
-                String availStr  = parts[5].trim();
-                String priceStr  = parts[6].trim();
+                String availStr = parts[5].trim();
+                String priceStr = parts[6].trim();
 
                 if (!Book.validateISBN(isbn13)) {
                     errors.add("Book line " + lineNum + ": Invalid ISBN-13 [" + isbn13 + "] for book " + bookID);
@@ -114,7 +104,7 @@ public class LibraryManager {
                     errors.add("Student line " + lineNum + ": insufficient columns -> " + line);
                     continue;
                 }
-                String id   = parts[0].trim();
+                String id = parts[0].trim();
                 String name = parts[1].trim();
                 if (!Student.validateStudentID(id)) {
                     errors.add("Student line " + lineNum + ": Invalid Student ID [" + id + "]");
@@ -143,10 +133,10 @@ public class LibraryManager {
                     errors.add("Transaction line " + lineNum + ": insufficient columns -> " + line);
                     continue;
                 }
-                String date      = parts[0].trim();
-                String bookID    = parts[1].trim();
+                String date = parts[0].trim();
+                String bookID = parts[1].trim();
                 String studentID = parts[2].trim();
-                String typeStr   = parts[3].trim();
+                String typeStr = parts[3].trim();
 
                 if (!Transaction.validateDate(date)) {
                     errors.add("Transaction line " + lineNum + ": Invalid date [" + date + "]");
@@ -164,31 +154,18 @@ public class LibraryManager {
         return errors;
     }
 
-    // ══════════════════════════════════════════════
-    // REPORTS
-    // ══════════════════════════════════════════════
-
-    /**
-     * Returns list of transactions (type=1, issue) for a given date.
-     */
     public List<Transaction> getBooksIssuedByDate(String date) {
         return transactions.stream()
                 .filter(t -> t.getType() == 1 && t.getDate().equals(date))
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Calculates the average price of all books.
-     */
+
     public double calculateAverageCost() {
         if (books.isEmpty()) return 0.0;
         return books.stream().mapToDouble(Book::getPrice).average().orElse(0.0);
     }
 
-    /**
-     * Search books by title. Supports wildcard '*' at the end.
-     * e.g. "Java*" matches any title starting with "Java"
-     */
     public List<Book> searchByTitle(String query) {
         String q = query.trim().toLowerCase();
         if (q.endsWith("*")) {
@@ -202,9 +179,6 @@ public class LibraryManager {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Export search results to a text file.
-     */
     public void exportSearchResults(List<Book> results, String fileName) throws IOException {
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(fileName))) {
             bw.write("BookID,Title,Author,ISBN-13,Copies,Available,Price");
@@ -216,32 +190,23 @@ public class LibraryManager {
         }
     }
 
-    // ── Accessors ─────────────────────────────
-    public List<Book>        getBooks()        { return books; }
-    public List<Student>     getStudents()     { return students; }
+    // Accessors
+    public List<Book> getBooks() { return books; }
+    public List<Student> getStudents() { return students; }
     public List<Transaction> getTransactions() { return transactions; }
 
-    /**
-     * Update a book record in the list (used after inline editing during import).
-     */
     public void updateBook(int index, Book updated) {
         if (index >= 0 && index < books.size()) {
             books.set(index, updated);
         }
     }
 
-    /**
-     * Update a student record in the list.
-     */
     public void updateStudent(int index, Student updated) {
         if (index >= 0 && index < students.size()) {
             students.set(index, updated);
         }
     }
 
-    /**
-     * Update a transaction record in the list.
-     */
     public void updateTransaction(int index, Transaction updated) {
         if (index >= 0 && index < transactions.size()) {
             transactions.set(index, updated);

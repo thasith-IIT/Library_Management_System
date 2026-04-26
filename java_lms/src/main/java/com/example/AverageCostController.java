@@ -8,10 +8,6 @@ import javafx.scene.control.Label;
 
 import java.io.IOException;
 
-/**
- * Controller for AverageCostScreen.fxml
- * CM1601 - Library Management System
- */
 public class AverageCostController implements com.example.ManagerAware {
 
     @FXML private Label lblResult;

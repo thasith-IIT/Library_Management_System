@@ -12,19 +12,15 @@ import javafx.stage.FileChooser;
 import java.io.IOException;
 import java.util.List;
 
-/**
- * Controller for SearchScreen.fxml
- * CM1601 - Library Management System
- */
 public class SearchController implements com.example.ManagerAware {
 
     @FXML
     private void handleExport(ActionEvent event) {
     }
 
-    @FXML private TextField            tfQuery;
-    @FXML private Label                lblCount;
-    @FXML private TableView<Book>      table;
+    @FXML private TextField tfQuery;
+    @FXML private Label lblCount;
+    @FXML private TableView<Book> table;
     @FXML private TableColumn<Book, String> colID;
     @FXML private TableColumn<Book, String> colTitle;
     @FXML private TableColumn<Book, String> colAuth;
@@ -41,10 +37,10 @@ public class SearchController implements com.example.ManagerAware {
 
     @FXML
     public void initialize() {
-        colID.setCellValueFactory(p    -> new SimpleStringProperty(p.getValue().getBookID()));
+        colID.setCellValueFactory(p -> new SimpleStringProperty(p.getValue().getBookID()));
         colTitle.setCellValueFactory(p -> new SimpleStringProperty(p.getValue().getTitle()));
-        colAuth.setCellValueFactory(p  -> new SimpleStringProperty(p.getValue().getAuthor()));
-        colISBN.setCellValueFactory(p  -> new SimpleStringProperty(p.getValue().getIsbn13()));
+        colAuth.setCellValueFactory(p -> new SimpleStringProperty(p.getValue().getAuthor()));
+        colISBN.setCellValueFactory(p -> new SimpleStringProperty(p.getValue().getIsbn13()));
         colAvail.setCellValueFactory(p -> new SimpleStringProperty(
                 p.getValue().getAvailable() + "/" + p.getValue().getCopies()));
         colPrice.setCellValueFactory(p -> new SimpleStringProperty(

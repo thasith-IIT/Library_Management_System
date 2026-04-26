@@ -1,9 +1,5 @@
 package com.example;
 
-/**
- * Represents a Book entity.
- * CM1601 - Library Management System
- */
 public class Book {
 
     private String bookID;
